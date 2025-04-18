@@ -12,19 +12,19 @@ app.post('/api/get-forecast', async (req, res) => {
   const { city, fromDate, toDate } = req.body;
   console.log(`Received request: city=${city}, fromDate=${fromDate}, toDate=${toDate}`);
 
-  const microserviceUrl = process.env.MICROSERVICE_URL;
+//   const microserviceUrl = process.env.MICROSERVICE_URL;
 
-  if (!microserviceUrl) {
-    console.error('MICROSERVICE_URL environment variable not set.');
-    return res.status(500).json({ error: 'Microservice URL not configured.' });
-  }
+//   if (!microserviceUrl) {
+//     console.error('MICROSERVICE_URL environment variable not set.');
+//     return res.status(500).json({ error: 'Microservice URL not configured.' });
+//   }
 
   if (!city || !fromDate || !toDate) {
     return res.status(400).json({ error: 'Missing required parameters: city, fromDate, or toDate.' });
   }
 
   try {
-    const microserviceResponse = await fetch(`${microserviceUrl}/forecast`, {
+    const microserviceResponse = await fetch(`https://weatherservice-production.up.railway.app/forecast`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
