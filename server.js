@@ -1,25 +1,26 @@
-
-
 const express = require('express');
-const fetch = require('node-fetch'); // Import the node-fetch library
-const cors = require('cors'); // You might need this if your client and server are on different origins
+const fetch = require('node-fetch');
+const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 app.use(express.json());
-app.use(cors()); // Enable CORS if needed
+app.use(cors());
 
 app.post('/api/get-forecast', async (req, res) => {
-  const { city } = req.body;
-  console.log(`Received city: ${city}`);
+  const { city, fromDate, toDate } = req.body;
+  console.log(`Received request: city=${city}, fromDate=${fromDate}, toDate=${toDate}`);
 
-  const microserviceUrl =  "https://weatherservice-production.up.railway.app/";//process.env.MICROSERVICE_URL; // Get the Railway URL of your microservice
-  const forecastDates = ['2025-04-18', '2025-04-19']; // Example dates to send to the microservice
+  const microserviceUrl = process.env.MICROSERVICE_URL;
 
   if (!microserviceUrl) {
     console.error('MICROSERVICE_URL environment variable not set.');
     return res.status(500).json({ error: 'Microservice URL not configured.' });
+  }
+
+  if (!city || !fromDate || !toDate) {
+    return res.status(400).json({ error: 'Missing required parameters: city, fromDate, or toDate.' });
   }
 
   try {
@@ -28,7 +29,7 @@ app.post('/api/get-forecast', async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ city: city, dates: forecastDates }), // Send city and dates to the microservice
+      body: JSON.stringify({ city: city, fromDate: fromDate, toDate: toDate }),
     });
 
     if (!microserviceResponse.ok) {
@@ -43,14 +44,13 @@ app.post('/api/get-forecast', async (req, res) => {
     const forecastDataFromMicroservice = await microserviceResponse.json();
     console.log('Forecast data from microservice:', forecastDataFromMicroservice);
 
-    // Process the data received from the microservice if needed
-    const processedForecast = `Forecast for ${forecastDataFromMicroservice.city}: ${JSON.stringify(forecastDataFromMicroservice.temps)}`;
-
     res.json({
       message: 'Forecast data retrieved from microservice!',
       city: city,
-      forecast: processedForecast,
-      microserviceData: forecastDataFromMicroservice, // Optionally send the raw microservice data
+      fromDate: fromDate,
+      toDate: toDate,
+      forecast: `Forecast from ${fromDate} to ${toDate}: ${JSON.stringify(forecastDataFromMicroservice.temps)}`,
+      microserviceData: forecastDataFromMicroservice,
     });
 
   } catch (error) {
@@ -62,5 +62,3 @@ app.post('/api/get-forecast', async (req, res) => {
 app.listen(port, () => {
   console.log(`Main app server listening on port ${port}`);
 });
-
- 
