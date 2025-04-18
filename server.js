@@ -1,8 +1,8 @@
 
-import fetch from "nore-fetch";
-const express = require('express');
+import fetch from "node-fetch";
+import express from "express";
 // const fetch = require('node-fetch');
-const cors = require('cors');
+import cors from "cors";
 
 
 
