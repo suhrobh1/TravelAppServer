@@ -1,10 +1,6 @@
-
-import fetch from "node-fetch";
-import express from "express";
-// const fetch = require('node-fetch');
-import cors from "cors";
-
-
+import express from 'express';
+import fetch from 'node-fetch';
+import cors from 'cors';
 
 const app = express();
 const port = process.env.PORT || 3001;
