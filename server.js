@@ -74,6 +74,8 @@ app.post('/api/get-trip', async (req, res) => {
     const forecastData = await forecastFetch(city, fromDate, toDate);
     const placesData = await fetchPlaces(city);
 
+    
+
     res.json({
       message: 'Trip data retrieved from microservices!',
       city,
