@@ -70,7 +70,7 @@ async function fetchSummary(city, latitude, longitude) {
   console.log("Inside summary fetch")
   try {
     // const response = await fetch(`http://localhost:3000/summary`, {
-    const response = await fetch(`citysummary-production.up.railway.app/summary`, {
+    const response = await fetch(`https://citysummary-production.up.railway.app/summary`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
