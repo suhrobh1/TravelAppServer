@@ -40,8 +40,8 @@ async function forecastFetch(city, fromDate, toDate, latitude, longitude) {
 // --- Helper: fetch places ---
 async function fetchPlaces(city, latitude, longitude) {
   try {
-    // const response = await fetch(`http://localhost:3004/places`, {
-   const response = await fetch(`https://placesofinterest-production.up.railway.app/places`, {
+    const response = await fetch(`http://localhost:3004/places`, {
+  //  const response = await fetch(`https://placesofinterest-production.up.railway.app/places`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
