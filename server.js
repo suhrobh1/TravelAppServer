@@ -13,8 +13,8 @@ app.use(cors());
 async function forecastFetch(city, fromDate, toDate, latitude, longitude) {
 
   try{
-    //const response = await fetch(`http://localhost:3003/forecast`, {
-    const response = await fetch(`https://weatherservice-production.up.railway.app/forecast`, {
+    const response = await fetch(`http://localhost:3003/forecast`, {
+    // const response = await fetch(`https://weatherservice-production.up.railway.app/forecast`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
