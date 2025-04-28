@@ -13,8 +13,8 @@ app.use(cors());
 async function forecastFetch(city, fromDate, toDate, latitude, longitude) {
 
   try{
-    const response = await fetch(`http://localhost:3003/forecast`, {
-    // const response = await fetch(`https://weatherservice-production.up.railway.app/forecast`, {
+    // const response = await fetch(`http://localhost:3003/forecast`, {
+    const response = await fetch(`https://weatherservice-production.up.railway.app/forecast`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -40,8 +40,8 @@ async function forecastFetch(city, fromDate, toDate, latitude, longitude) {
 // --- Helper: fetch places ---
 async function fetchPlaces(city, latitude, longitude) {
   try {
-    const response = await fetch(`http://localhost:3004/places`, {
-  //  const response = await fetch(`https://placesofinterest-production.up.railway.app/places`, {
+    // const response = await fetch(`http://localhost:3004/places`, {
+   const response = await fetch(`https://placesofinterest-production.up.railway.app/places`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -69,8 +69,8 @@ async function fetchSummary(city, latitude, longitude) {
 
   console.log("Inside summary fetch")
   try {
-    const response = await fetch(`http://localhost:3000/summary`, {
-    // const response = await fetch(`citysummary-production.up.railway.app/summary`, {
+    // const response = await fetch(`http://localhost:3000/summary`, {
+    const response = await fetch(`citysummary-production.up.railway.app/summary`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
