@@ -96,11 +96,11 @@ async function fetchSummary(city, latitude, longitude) {
 
 
 
-let location ="";
+
 
 
 // --- Express route ---
-app.post('/api/get-trip', async (req, res) => {
+app.post('/get-trip', async (req, res) => {
   const { city, fromDate, toDate, latitude, longitude } = req.body;
   console.log(`Received request: city=${city}, fromDate=${fromDate}, toDate=${toDate}, latitude=${latitude}, longitude=${longitude}`);
 
