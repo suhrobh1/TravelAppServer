@@ -64,7 +64,7 @@ async function fetchPlaces(city, latitude, longitude) {
   }
 }
 
-// --- Helper: fetch places ---
+// --- Helper: fetch AI summary ---
 async function fetchSummary(city, latitude, longitude) {
 
   console.log("Inside summary fetch")
@@ -94,6 +94,32 @@ async function fetchSummary(city, latitude, longitude) {
 }
 
 
+// --- Helper: fetch hotels ---
+async function fetchHotels(city, latitude, longitude) {
+  try {
+    // const response = await fetch(`http://localhost:3004/places`, {
+   const response = await fetch(`https://hotels-bcbydtfhekbcg5bg.canadacentral-01.azurewebsites.net/hotels`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ city, latitude, longitude }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw {
+        status: response.status,
+        statusText: response.statusText,
+        errorData,
+      };
+    }
+
+    return await response.json();
+  } catch (err) {
+    throw err;
+  }
+}
 
 
 
@@ -115,7 +141,7 @@ app.post('/api/get-trip', async (req, res) => {
     const forecastData = await forecastFetch(city, fromDate, toDate, latitude, longitude);
     const placesData = await fetchPlaces(city, latitude, longitude);
     const summaryData = await fetchSummary(city, latitude, longitude);
-
+    const hotelsData = await fetchHotels(city, latitude,longitude);
 
     console.log("SummaryData", summaryData)
     
@@ -130,7 +156,9 @@ app.post('/api/get-trip', async (req, res) => {
       microserviceData: {
         forecast: forecastData,
         places: placesData,
-        summary: summaryData
+        summary: summaryData,
+        hotels: hotelsData
+
       },
     });
 
