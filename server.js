@@ -1,12 +1,23 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import cors from 'cors';
+import mongoose from 'mongoose';
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+import authenticateToken from './middleware/authMiddleware.js';
+
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
 
+
 app.use(express.json());
 app.use(cors());
+
+
 
 
 // --- Helper: fetch forecast ---
@@ -93,7 +104,6 @@ async function fetchSummary(city, latitude, longitude) {
   }
 }
 
-
 // --- Helper: fetch hotels ---
 async function fetchHotels(city, latitude, longitude) {
   try {
@@ -120,10 +130,6 @@ async function fetchHotels(city, latitude, longitude) {
     throw err;
   }
 }
-
-
-
-
 
 // --- Express route ---
 app.post('/api/get-trip', async (req, res) => {
@@ -177,8 +183,82 @@ app.post('/api/get-trip', async (req, res) => {
 });
 
 
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("MongoDB connection error:", err));
+
+// User Schema and Model
+const userSchema = new mongoose.Schema({
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true }
+});
+const User = mongoose.model("User", userSchema);
 
 
+// Sign up code
+app.post("/api/auth/signup", async (req, res) => {
+  const { email, password, firstName, lastName } = req.body.form;
+
+  console.log("Req.body from signup: ", req.body);
+  console.log("first name:", firstName );
+
+  try {
+    const exists = await User.findOne({ email });
+    if (exists) return res.status(400).json({ msg: "User already exists" });
+
+    const hashed = await bcrypt.hash(password, 10);
+    await User.create({firstName, lastName, email, password: hashed,  });
+
+    res.status(201).json({ msg: "User created" });
+  } catch (err) {
+    res.status(500).json({ msg: "Error creating user" });
+  }
+});
+
+
+
+// Login code
+app.post("/api/auth/login", async (req, res) => {
+
+  console.log("Req.body from signin: ", req.body);
+  // console.log("email:", email );
+
+  const { email, password } = req.body.form;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ msg: "Invalid credentials" });
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ msg: "Invalid credentials" });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    res.json({ token, user });
+  } catch (err) {
+    res.status(500).json({ msg: "Error logging in" });
+  }
+});
+
+
+app.put("/api/auth/user", authenticateToken, async (req, res) => {
+
+  console.log("inside put!")
+
+  try {
+    const { firstName, lastName, email } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { firstName, lastName, email },
+      { new: true }
+    ).select("-password");
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ msg: "Server error" });
+  }
+});
 
 
 
