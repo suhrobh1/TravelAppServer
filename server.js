@@ -131,66 +131,9 @@ async function fetchHotels(city, latitude, longitude) {
   }
 }
 
-// --- Express route ---
-// app.post('/api/get-trip', async (req, res) => {
-//   const { city, fromDate, toDate, latitude, longitude } = req.body;
-//   console.log(`Received request: city=${city}, fromDate=${fromDate}, toDate=${toDate}, latitude=${latitude}, longitude=${longitude}`);
-
-//   try {
-//     const forecastData = await forecastFetch(city, fromDate, toDate, latitude, longitude);
-//     const placesData = await fetchPlaces(city, latitude, longitude);
-//     const summaryData = await fetchSummary(city, latitude, longitude);
-//     const hotelsData = await fetchHotels(city, latitude,longitude);
-
-//     console.log("SummaryData", summaryData)
-
-//     //travelplan data append to db
-//     try {
-//       console.log("Tavel data to be saved - FORECAST:", forecastData);
-//       console.log("Tavel data to be saved - PLACES:", placesData);
-//       console.log("Tavel data to be saved - HOTELS:", hotelsData);
-//       console.log("Tavel data to be saved - SUMMARY:", summaryData);
-
-      
-//     } catch (err) {
-//       console.log("Error in travel data save: ", err)
-//       res.status(500).json({ msg: "Error creating travel plan" });
-//     }
-
-//     res.json({
-//       message: 'Trip data retrieved from microservices and saved to DB !!',
-//       city,
-//       fromDate,
-//       toDate,
-//       forecast: forecastData.temps,
-//       places: placesData.places || placesData, // fallback if shape isn't wrapped in "places"
-//       microserviceData: {
-//         forecast: forecastData,
-//         places: placesData,
-//         summary: summaryData,
-//         hotels: hotelsData
-//       },
-//     });
-
-//   } catch (error) {
-//     if (error?.status) {
-//       console.error('Error from microservice:', error.errorData);
-//       res.status(error.status).json({
-//         error: `Microservice failed: ${error.statusText}`,
-//         details: error.errorData,
-//       });
-//     } else {
-//       console.error('Error communicating with microservices:', error);
-//       res.status(500).json({ error: 'Failed to communicate with microservices.' });
-//     }
-//   }
-// });
-
-
 
 app.post('/api/get-trip', async (req, res) => {
-  const { city, fromDate, toDate, latitude, longitude } = req.body;
-  console.log(`Received request: city=${city}, fromDate=${fromDate}, toDate=${toDate}, latitude=${latitude}, longitude=${longitude}`);
+  const { city, fromDate, toDate, latitude, longitude, storedUserID } = req.body;
 
   try {
     const forecastData = await forecastFetch(city, fromDate, toDate, latitude, longitude);
@@ -198,21 +141,15 @@ app.post('/api/get-trip', async (req, res) => {
     const summaryData = await fetchSummary(city, latitude, longitude);
     const hotelsData = await fetchHotels(city, latitude, longitude);
 
-    console.log("SummaryData", summaryData);
-
     try {
-      console.log("Travel data to be saved - FORECAST:", forecastData);
-      console.log("Travel data to be saved - PLACES:", placesData);
-      console.log("Travel data to be saved - HOTELS:", hotelsData);
-      console.log("Travel data to be saved - SUMMARY:", summaryData);
 
       await TravelPlan.create({
         weatherForecast: forecastData.forecast || [],
+        userID: storedUserID,
         placesOfInterest: (placesData.places || []).slice(0, 5),
         hotels: (hotelsData.places || []).slice(0, 5),
-        summary: [{ summary: summaryData.summary || summaryData }]
+        summary: [{ summary: summaryData.summary || summaryData }],
       });
-
     } catch (err) {
       console.error("Error saving travel plan: ", err);
       return res.status(500).json({ msg: "Error creating travel plan" });
@@ -283,11 +220,14 @@ const SummarySchema = new mongoose.Schema({
   summary: { type: String, required: true },
 }, { _id: false });
 
-
 const HotelSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String, required: true },
   distance: { type: Number, required: true } // e.g., in km or miles
+}, { _id: false });
+
+const userIDSchema = new mongoose.Schema({
+  userID: { type: String, required: true },
 }, { _id: false });
 
 const TravelPlanSchema = new mongoose.Schema({
@@ -306,6 +246,8 @@ const TravelPlanSchema = new mongoose.Schema({
     type: [HotelSchema],
     validate: [arrayLimit(5), 'Max 5 hotels']
   },
+  userID: {type: String}
+  
 }, { timestamps: true });
 
 // Helper to limit array size
@@ -383,11 +325,14 @@ app.put("/api/auth/user", authenticateToken, async (req, res) => {
 });
 
 // Getting travel plans from DB
-app.get("/api/travel-plans", async (req, res) => {
+app.post("/api/travel-plans", async (req, res) => {
+
+  const {storedUserID }= req.body;
   try {
-    const plans = await TravelPlan.find().sort({ createdAt: -1 }).limit(10);
+    const plans = await TravelPlan.find({userID:storedUserID});
     res.json(plans);
   } catch (err) {
+    console.log("Error from find by ID", err)
     console.error("Error fetching travel plans:", err);
     res.status(500).json({ msg: "Failed to retrieve travel plans" });
   }
